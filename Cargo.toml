@@ -1,8 +1,9 @@
 [package]
-name = "formL"
+name = "forml"
 version = "0.1.0"
 authors = ["Simon Scatton <simon.scatton@epita.fr>"]
 edition = "2018"
 
 
 [dependencies]
+rustyline = "8.0.0"

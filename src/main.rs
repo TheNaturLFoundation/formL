@@ -1,3 +1,8 @@
+mod session;
+
+use session::Session;
+
 fn main() {
-    println!("Hello, world!");
+    let mut session = Session::default();
+    session.start_session();
 }

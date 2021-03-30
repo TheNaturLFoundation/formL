@@ -1,0 +1,33 @@
+use std::str::FromStr;
+use crate::processing::ast::{Expr, Operator};
+
+grammar;
+
+pub Expr: Box<Expr> = {
+    Expr ExprOp Factor => Box::new(Expr::BinaryOp(<>)),
+    Factor,
+};
+
+ExprOp: Operator = {
+    "+" => Operator::Add,
+    "-" => Operator::Sub,
+};
+
+Factor: Box<Expr> = {
+    Factor FactorOp Term => Box::new(Expr::BinaryOp(<>)),
+    Term,
+};
+
+FactorOp: Operator = {
+    "*" => Operator::Mul,
+    "/" => Operator::Div,
+};
+
+Term: Box<Expr> = {
+    Num => Box::new(Expr::Number(<>)),
+    "(" <Expr> ")",
+};
+
+Num: i32 = {
+    r"[0-9]+" => i32::from_str(<>).unwrap(),
+};

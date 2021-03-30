@@ -1,8 +1,10 @@
-mod session;
+mod processing;
+//mod session;
 
-use session::Session;
+use processing::parser::Parser;
 
 fn main() {
-    let mut session = Session::default();
-    session.start_session();
+    let parser = Parser::new();
+    let expr = parser.parse("(1 + 5) * 2").evaluate();
+    dbg!(expr);
 }

@@ -3,7 +3,13 @@ name = "forml"
 version = "0.1.0"
 authors = ["Simon Scatton <simon.scatton@epita.fr>"]
 edition = "2018"
+build = "build.rs" # LALRPOP preprocessing
 
+
+[build-dependencies]
+lalrpop = "0.19.5"
 
 [dependencies]
+lalrpop-util = "0.19.5"
+regex = "1"
 rustyline = "8.0.0"

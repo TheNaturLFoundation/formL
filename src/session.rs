@@ -1,14 +1,17 @@
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+use crate::processing::parser::Parser;
 
 pub struct Session {
     editor: Editor<()>,
+    parser: Parser,
 }
 
 impl Session {
     pub fn new() -> Session {
         Session {
             editor: Editor::<()>::new(),
+            parser: Parser::new(),
         }
     }
 
@@ -18,7 +21,8 @@ impl Session {
             match readline {
                 Ok(line) => {
                     self.editor.add_history_entry(line.as_str());
-                    println!("{}", line);
+                    let expr = self.parser.parse(&line);
+                    println!("{}", expr.evaluate());
                 }
                 Err(ReadlineError::Interrupted) => {
                     println!("CTRL-C");

@@ -22,7 +22,7 @@ impl Session {
                 Ok(line) => {
                     self.editor.add_history_entry(line.as_str());
                     let expr = self.parser.parse(&line);
-                    println!("{}", expr.evaluate());
+                    dbg!("{}", *expr);
                 }
                 Err(ReadlineError::Interrupted) => {
                     println!("CTRL-C");

@@ -1,33 +1,78 @@
 use std::str::FromStr;
-use crate::processing::ast::{Expr, Operator};
+use crate::processing::ast::{Expr, Operator, SetType};
+use std::convert::TryFrom;
 
 grammar;
 
-pub Expr: Box<Expr> = {
-    Expr ExprOp Factor => Box::new(Expr::BinaryOp(<>)),
-    Factor,
-};
-
-ExprOp: Operator = {
-    "+" => Operator::Add,
-    "-" => Operator::Sub,
-};
-
-Factor: Box<Expr> = {
-    Factor FactorOp Term => Box::new(Expr::BinaryOp(<>)),
-    Term,
-};
-
-FactorOp: Operator = {
-    "*" => Operator::Mul,
-    "/" => Operator::Div,
-};
-
-Term: Box<Expr> = {
-    Num => Box::new(Expr::Number(<>)),
+pub Atom: Box<Expr> = {
+    Natural => Box::new(Expr::Natural(<>)),
+    "-" <n: Natural> => Box::new(Expr::Integer(-i64::try_from(n).unwrap())),
+    Real => Box::new(Expr::Real(<>)),
+    Identifier => Box::new(Expr::Identifier(<>)),
     "(" <Expr> ")",
 };
 
-Num: i32 = {
-    r"[0-9]+" => i32::from_str(<>).unwrap(),
+pub Expr: Box<Expr> = {
+    #[precedence(level="0")]
+    Atom,
+    #[precedence(level="1")] #[assoc(side="left")]
+    <l:Expr> "/" <r:Expr> => Box::new(Expr::BinaryOperator(l, Operator::Div, r)),
+    <l:Expr> "*" <r:Expr> => Box::new(Expr::BinaryOperator(l, Operator::Mul, r)),
+    #[precedence(level="2")] #[assoc(side="left")]
+    <l:Expr> "+" <r:Expr> => Box::new(Expr::BinaryOperator(l, Operator::Plus, r)),
+    <l:Expr> "-" <r:Expr> => Box::new(Expr::BinaryOperator(l, Operator::Minus, r)),
+    Tuple,
+    List,
+    #[precedence(level="3")] #[assoc(side="left")]
+    Assignemnt,
+    FunctionDefinition,
+};
+
+Tuple: Box<Expr> = {
+    "(" <t: Comma<Atom>> ")" => Box::new(Expr::Tuple(t)),
+};
+
+List: Box<Expr> = {
+    "[" <t: Comma<Atom>> "]" => Box::new(Expr::List(t)),
+};
+
+Comma<T>: Vec<T> = { // (1)
+    <v:(<T> ",")+> <e:T?> => match e { // (2)
+        None => v,
+        Some(e) => {
+            let mut v = v;
+            v.push(e);
+            v
+        }
+    }
+};
+
+Assignemnt: Box<Expr> = {
+    <l: Identifier> "=" <r: Expr> => Box::new(Expr::Assignment(l, r)),
+}
+
+FunctionDefinition: Box<Expr> = {
+    <l: Identifier> ":" <ker: Set> "->" <im: Set> "=" <r: Expr> => Box::new(Expr::FunctionDefinition(<>)),
+}
+
+Set: SetType = {
+    <value: r"[ℝℤℕ]"> => match value {
+        "ℝ" => SetType::Real,
+        "ℕ" => SetType::Natural,
+        "ℤ" => SetType::Integer,
+        _ => SetType::Integer,
+    },
+    <custom: Identifier> => SetType::Custom(custom.parse().unwrap()),
+}
+
+Identifier: String = {
+    r"[_a-zA-Z][_a-zA-Z0-9]*" => String::from(<>),
+};
+
+Natural: u64 = {
+    r"[0-9]+" => u64::from_str(<>).unwrap(),
+};
+
+Real: f64 = {
+    r"[0-9]+\.[0-9]*" => f64::from_str(<>).unwrap(),
 };
